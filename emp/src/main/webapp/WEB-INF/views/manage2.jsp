@@ -354,7 +354,7 @@
 		content += `<select name="job"><option value="">선택안함</option>`;
 		for(let job of jList) content += `<option value="`+job+`">`+job+`</option>`;
 		content += `<option value="add">추가</option></select></td><td>`;
-		content += createOption("mbr", empnoList)+`</td><td>`;
+		content += createOption("mgr", empnoList)+`</td><td>`;
 		content += `<input type="date" name="hiredate"></td>
 					<td><input name="sal" type="number" style="width: 60px;" min="0"></td>
 					<td><input name="comm" type="number" style="width: 60px;" min="0"></td><td>`;
