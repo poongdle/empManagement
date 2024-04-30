@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="prc.emp.mapper.ManageMapper2">
+
+	<!-- 전체 사원 조회 -->
+    <!--  List<EmpDTO> findAll(@Param("startRow") int startRow, @Param("endRow") int endRow); -->
+    <select id="findAll" resultType="prc.emp.domain.EmpDTO">
+    	SELECT ROW_NUMBER() OVER(ORDER BY A.HIREDATE) AS NO
+    		 , A.EMPNO AS EMPNO
+    		 , A.ENAME AS ENAME
+    		 , A.JOB AS JOB
+    		 , A.MGR AS MGR
+    		 , A.HIREDATE AS HIREDATE
+    		 , A.SAL AS SAL
+    		 , A.COMM AS COMM
+    		 , A.DEPTNO AS DEPTNO
+ 	      FROM EMP A
+	     ORDER BY NO
+     </select>
+
+	<!-- 전체 부서 조회 -->
+    <!--  List<DeptDTO> findDept(); -->
+    <select id="findDept" resultType="prc.emp.domain.DeptDTO">
+    	SELECT ROW_NUMBER() OVER(ORDER BY A.DEPTNO) AS NO
+    		 , A.DEPTNO AS DEPTNO
+    		 , A.DNAME AS DNAME
+    		 , A.LOC AS LOC
+     	  FROM DEPT A
+     	 ORDER BY NO
+    </select>
+	
+	<!-- 사원 검색 -->
+	<!-- 	List<EmpDTO> searchEmp(@Param("searchDept") int searchDept, @Param("searchWord") String searchWord, @Param("isName") boolean isName); -->
+	<select id="searchEmp" resultType="prc.emp.domain.EmpDTO">
+		SELECT ROW_NUMBER() OVER(ORDER BY A.HIREDATE) AS NO
+    		 , A.EMPNO AS EMPNO
+			 , A.ENAME AS ENAME
+			 , A.JOB AS JOB
+			 , A.MGR AS MGR
+			 , A.HIREDATE AS HIREDATE
+			 , A.SAL AS SAL
+			 , A.COMM AS COMM
+			 , A.DEPTNO AS DEPTNO
+		  FROM EMP A
+		 WHERE 
+				<choose>
+		 			<when test="searchDept != '-1'">
+						A.DEPTNO = ${searchDept}
+					</when>
+					<otherwise>
+						1=1
+					</otherwise>
+				</choose>
+				<if test="searchWord != null and searchWord != ''">
+					<choose>
+						<when test="isName">
+							AND A.ENAME = #{searchWord}
+						</when>
+						<otherwise>
+							AND A.EMPNO = #{searchWord}
+						</otherwise>
+					</choose>
+				</if>
+		 ORDER BY NO
+	</select>
+    
+    <!-- 부서 검색 -->
+    <!-- List<DeptDTO> searchDept(@Param("searchDept") int searchDept, @Param("searchWord") String searchWord, @Param("isName") boolean isName); -->
+    <select id="searchDept" resultType="prc.emp.domain.DeptDTO">
+    	SELECT ROW_NUMBER() OVER(ORDER BY B.DEPTNO) AS NO
+    		 , B.DEPTNO AS DEPTNO
+    		 , B.DNAME AS DNAME
+    		 , B.LOC AS LOC
+		<choose>
+	    	<when test="searchDept != -1">
+     	  		 FROM DEPT B 
+	     	 	WHERE B.DEPTNO = #{searchDept}
+			</when>
+	     	<otherwise>
+	     		FROM EMP A INNER JOIN DEPT B
+     	    	  ON A.DEPTNO = B.DEPTNO
+     	    	<if test="searchWord != null and searchWord != ''">
+		     	   WHERE
+						<choose>
+							<when test="isName">
+								A.ENAME = #{searchWord}
+							</when>
+							<otherwise>
+								A.EMPNO = #{searchWord}
+							</otherwise>
+						</choose>
+				</if>
+	     	</otherwise>
+		</choose>
+     	 GROUP BY B.DEPTNO, B.DNAME, B.LOC
+     	 ORDER BY NO
+    </select>
+    
+    <!-- 직업 조회 -->
+    <!--  List<String> findJob(); -->
+    <select id="findJob" resultType="String">
+     	SELECT DISTINCT A.JOB
+     	  FROM EMP A
+     	 WHERE A.JOB IS NOT NULL
+     	 ORDER BY A.JOB
+    </select>
+     
+    <!-- 매니저 후보 리스트 조회 -->
+    <!--  List<Integer> findEmpno(); -->
+    <select id="findEmpno" resultType="int">
+     	SELECT DISTINCT A.EMPNO
+     	  FROM EMP A
+     	 ORDER BY A.EMPNO
+    </select>
+    
+    <!-- 매니저 조회 -->
+	<!-- List<Integer> findMgr(); -->
+    <select id="findMgr" resultType="int">
+		SELECT DISTINCT A.MGR
+		  FROM EMP A
+		 ORDER BY A.MGR
+	</select>
+
+	<!-- 사원 추가 -->
+	<!-- void insertEmp(List<EmpDTO> insertEmpList); -->
+	<insert id="insertEmp" parameterType="list">
+		INSERT ALL
+			<foreach collection="insertEmpList" item="emp" separator=" ">
+				  INTO EMP (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO)
+				VALUES (#{emp.empno}, #{emp.ename}, #{emp.job}, #{emp.mgr}, #{emp.hiredate}, #{emp.sal}, #{emp.comm}, #{emp.deptno})
+			</foreach>
+		SELECT 1 FROM DUAL
+	</insert>
+
+	<!-- 사원 수정 -->
+	<!-- void updateEmp(List<EmpDTO> updateEmpList); -->
+	<update id="updateEmp" >
+		<foreach collection="updateEmpList" item="emp" open="DECLARE BEGIN " separator="; " close="; END;">
+			UPDATE EMP A
+			   SET A.JOB = #{emp.job}
+			       , A.MGR = #{emp.mgr}
+			       , A.SAL = #{emp.sal}
+			       , A.COMM = #{emp.comm}
+			       , A.DEPTNO = #{emp.deptno}
+			 WHERE A.EMPNO = #{emp.empno}
+		</foreach>
+	</update>
+     
+    <!-- 사원 삭제 -->
+	<!-- void deleteEmp(List<EmpDTO> deleteEmpList); -->
+	<delete id="deleteEmp">
+		DELETE FROM EMP A
+		 WHERE A.EMPNO IN (
+		 					<foreach collection="deleteEmpList" item="emp" separator=",">
+		 						#{emp.empno} 
+		 					</foreach>
+		 					)
+	</delete>
+
+	<!-- 부서 추가 -->
+	<!-- void insertDept(List<DeptDTO> insertDeptList); -->
+	<insert id="insertDept" parameterType="list">
+		INSERT ALL
+			<foreach collection="insertDeptList" item="dept" separator=" ">
+				  INTO DEPT (DEPTNO, DNAME, LOC)
+				VALUES (#{dept.deptno}, #{dept.dname}, #{dept.loc})
+			</foreach>
+		SELECT 1 FROM DUAL
+	</insert>
+
+	<!-- 부서 수정 -->
+	<!-- void updateDept(List<DeptDTO> updateDeptList); -->
+	<update id="updateDept" parameterType="list">
+		<foreach collection="updateDeptList" item="dept" open="DECLARE BEGIN " separator="; " close="; END;">
+			UPDATE DEPT A
+			   SET A.DNAME = #{dept.dname}
+			       , A.LOC = #{dept.loc}
+			 WHERE A.DEPTNO = #{dept.deptno}
+		</foreach>
+	</update>
+	
+	<!-- 부서에 해당하는 사원 삭제 -->
+	<!-- void deleteEmpOfDept(@Param("deleteDeptList") List<DeptDTO> deleteDeptList); -->
+	<delete id="deleteEmpOfDept" parameterType="list">
+		DELETE FROM EMP A
+		 WHERE A.DEPTNO IN (
+		 					<foreach collection="deleteDeptList" item="dept" separator=",">
+		 						#{dept.deptno} 
+		 					</foreach>
+		 					)
+	</delete>
+	
+	<!-- 부서에 해당하는 사원 수정 -->
+	<!-- void updateEmpOfDept(@Param("deleteDeptList") List<DeptDTO> deleteDeptList); -->
+	<update id="updateEmpOfDept" parameterType="list">
+		UPDATE EMP A
+		   SET A.DEPTNO = NULL
+		 WHERE A.DEPTNO IN (
+		 					<foreach collection="deleteDeptList" item="dept" separator=",">
+		 						#{dept.deptno} 
+		 					</foreach>
+		 					)
+	</update>
+     
+    <!-- 부서 삭제 -->
+	<!-- void deleteDept(List<DeptDTO> deleteDeptList); -->
+	<delete id="deleteDept" parameterType="list">
+		DELETE FROM DEPT A
+		 WHERE A.DEPTNO IN (
+		 					<foreach collection="deleteDeptList" item="dept" separator=",">
+		 						#{dept.deptno} 
+		 					</foreach>
+		 					)
+	</delete>
+
+</mapper>

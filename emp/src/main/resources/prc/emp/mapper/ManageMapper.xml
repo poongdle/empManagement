@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="prc.emp.mapper.ManageMapper">
+
+	<!-- 전체 사원 조회 -->
+    <!--  List<EmpDTO> findAll(@Param("startRow") int startRow, @Param("endRow") int endRow); -->
+    <select id="findAll" resultType="prc.emp.domain.EmpDTO">
+    	<![CDATA[
+	    	SELECT A.EMPNO, A. ENAME, A.JOB, A.MGR, A.HIREDATE, A.SAL, A.COMM, A.DEPTNO, A.TOTALCNT
+	          FROM ( SELECT A.*, ROWNUM AS RN, MAX(ROWNUM) OVER () AS TOTALCNT
+		       	       FROM ( SELECT *
+		     	  	      	    FROM EMP A
+		     	 		       ORDER BY A.EMPNO ) A ) A
+	          WHERE RN >= #{startRow}
+	            AND RN <= #{endRow}
+     	 ]]>
+     </select>
+
+	<!-- 정렬만 수행 -->
+	<!-- List<EmpDTO> orderEmp(@Param("searchItem") String searchItem
+						 , @Param("startRow") int startRow
+						 , @Param("endRow") int endRow
+						 , @Param("orderItem") String orderItem
+						 , @Param("orderType") String orderType); 
+	<select id="orderEmp" resultType="prc.emp.domain.EmpDTO">
+		SELECT A.EMPNO, A. ENAME, A.JOB, A.MGR, A.HIREDATE, A.SAL, A.COMM, A.DEPTNO, A.TOTALCNT
+		  FROM ( SELECT A.*, ROWNUM AS RN, MAX(ROWNUM) OVER () AS TOTALCNT
+		  	       FROM ( SELECT *
+		      	            FROM EMP A
+			               ORDER BY
+			               		<choose>
+			               			<when test="orderType == 'ASC'">
+			               				<choose>
+			               					<when test="orderItem == 'empno'">
+			               						A.EMPNO ASC
+			               					</when>
+			               					<when test="orderItem == 'ename'">
+			               						A.ENAME ASC
+			               					</when>
+			               					<when test="orderItem == 'job'">
+			               						A.JOB ASC
+			               					</when>
+			               					<when test="orderItem == 'mgr'">
+			               						A.MGR ASC
+			               					</when>
+			               					<when test="orderItem == 'hiredate'">
+			               						A.HIREDATE ASC
+			               					</when>
+			               					<when test="orderItem == 'sal'">
+			               						A.SAL ASC
+			               					</when>
+			               					<when test="orderItem == 'comm'">
+			               						A.COMM ASC
+			               					</when>
+			               					<when test="orderItem == 'deptno'">
+			               						A.DEPTNO ASC
+			               					</when>
+			               				</choose>
+			               			</when>
+			               			<when test="orderType == 'DESC'">
+			               				<choose>
+			               					<when test="orderItem == 'empno'">
+			               						A.EMPNO DESC
+			               					</when>
+			               					<when test="orderItem == 'ename'">
+			               						A.ENAME DESC
+			               					</when>
+			               					<when test="orderItem == 'job'">
+			               						A.JOB DESC
+			               					</when>
+			               					<when test="orderItem == 'mgr'">
+			               						A.MGR DESC
+			               					</when>
+			               					<when test="orderItem == 'hiredate'">
+			               						A.HIREDATE DESC
+			               					</when>
+			               					<when test="orderItem == 'sal'">
+			               						A.SAL DESC
+			               					</when>
+			               					<when test="orderItem == 'comm'">
+			               						A.COMM DESC
+			               					</when>
+			               					<when test="orderItem == 'deptno'">
+			               						A.DEPTNO DESC
+			               					</when>
+			               				</choose>
+			               			</when>
+			               			<otherwise>
+			               				A.EMPNO ASC
+			               			</otherwise>
+			               		</choose> ) A ) A
+		 WHERE RN BETWEEN #{startRow} AND #{endRow}
+	</select>
+	-->
+	
+	<!-- 검색, 정렬 -->
+	<!-- 	List<EmpDTO> searchEmp(@Param("searchItem") String searchItem
+								 , @Param("searchWord") String searchWord
+								 , @Param("searchRange1") int searchRange1
+								 , @Param("searchRange2") int searchRange2
+								 , @Param("startRow") int startRow
+								 , @Param("endRow") int endRow); -->
+	<select id="searchEmp" resultType="prc.emp.domain.EmpDTO">
+		SELECT A.EMPNO, A. ENAME, A.JOB, A.MGR, A.HIREDATE, A.SAL, A.COMM, A.DEPTNO, A.TOTALCNT
+		  FROM ( SELECT A.*, ROWNUM AS RN, MAX(ROWNUM) OVER () AS TOTALCNT
+		  	       FROM ( SELECT *
+		      	            FROM EMP A
+			     	       WHERE 
+			      	 	   		<choose>
+				      				<when test="searchItem == 'empno'">
+				      		    		A.EMPNO = #{searchWord} 
+			    	  	      		</when>
+			    	  	      		<when test="searchItem == 'ename'">
+			    	  	      			A.ENAME = #{searchWord}
+			    	  	      		</when>
+			    	  	      		<when test="searchItem == 'job'">
+			    	  	      			A.JOB = #{searchWord}
+			    	  	      		</when>
+			    	  	      		<when test="searchItem == 'mgr'">
+			    	  	      			A.MGR = #{searchWord}
+			    	  	      		</when>
+			    	  	      		<when test="searchItem == 'hiredate'">
+			    	  	      			A.HIREDATE = #{searchWord}
+			    	  	      		</when>
+			    	  	      		<when test="searchItem == 'deptno'">
+			    	  	      			A.DEPTNO = #{searchWord}
+			    	  	      		</when>
+				      				<when test="searchItem == 'sal'">
+				      		    		A.SAL BETWEEN #{searchRange1} AND #{searchRange2} 
+			    	  	      		</when>
+			    	  	      		<when test="searchItem == 'comm'">
+			    	  	      			A.COMM BETWEEN #{searchRange1} AND #{searchRange2}
+			    	  	      		</when>
+			      		    	</choose>
+			               ORDER BY A.EMPNO ASC ) A ) A
+		 WHERE RN BETWEEN #{startRow} AND #{endRow}
+	</select>
+
+    <!--  List<Integer> findDeptno(); -->
+    <select id="findDeptno" resultType="int">
+    	SELECT A.DEPTNO
+     	  FROM DEPT A
+     	 ORDER BY A.DEPTNO
+    </select>
+    
+    <!--  List<String> findJob(); -->
+    <select id="findJob" resultType="String">
+     	SELECT DISTINCT A.JOB
+     	  FROM EMP A
+     	 ORDER BY A.JOB
+    </select>
+     
+    <!--  List<Integer> findEmpno(); -->
+    <select id="findEmpno" resultType="int">
+     	SELECT DISTINCT A.EMPNO
+     	  FROM EMP A
+     	 ORDER BY A.EMPNO
+    </select>
+     
+	<!-- int deleteEmp(List<Integer> empnoList); -->
+	<delete id="deleteEmp">
+		DELETE FROM EMP A
+		 WHERE A.EMPNO IN
+		 <foreach collection="empnoList" item="empno" separator=", " open="(" close=")">
+		 	#{empno}
+		 </foreach>
+	</delete>
+
+	<!-- int updateEmp(EmpDTO emp); -->
+	<update id="updateEmp" >
+		UPDATE EMP A
+		   SET A.JOB = #{emp.job}
+		       , A.MGR = #{emp.mgr}
+		       , A.SAL = #{emp.sal}
+		       , A.COMM = #{emp.comm}
+		       , A.DEPTNO = #{emp.deptno}
+		 WHERE A.EMPNO = #{emp.empno}
+	</update>
+
+
+	<!-- int insertEmp(EmpDTO emp); -->
+	<insert id="insertEmp">
+		INSERT INTO EMP A (A.EMPNO, A.ENAME, A.JOB, A.MGR, A.HIREDATE, A.SAL, A.COMM, A.DEPTNO)
+		VALUES (#{emp.empno}, #{emp.ename}, #{emp.job}, #{emp.mgr}, #{emp.hiredate}, #{emp.sal}, #{emp.comm}, #{emp.deptno})
+	</insert>
+
+</mapper>
